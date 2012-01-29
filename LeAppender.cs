@@ -6,17 +6,12 @@
 
 
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Net.Security;
+using System.Configuration;
+﻿using System.Linq;
+﻿using System.Text.RegularExpressions;
+﻿using System.Net.Security;
 using System.Net.Sockets;
-using System.IO;
-
-using log4net.Layout;
 using log4net.Core;
-using log4net.Util;
-using log4net.Appender;
 
 namespace log4net.Appender
 {
@@ -25,7 +20,7 @@ namespace log4net.Appender
         #region Private Instance Fields
         private SslStream sslSock = null;
         private TcpClient leSocket = null;
-        private System.Text.UTF8Encoding encoding;
+        private System.Text.ASCIIEncoding encoding;
         private String m_Key;
         private String m_Location;
         private bool m_Debug;
@@ -36,13 +31,13 @@ namespace log4net.Appender
         public string Key
         {
             get { return m_Key; }
-            set { m_Key = value; }
+            set { m_Key = SubstituteAppSetting(value); }
         }
 
         public string Location
         {
             get { return m_Location; }
-            set { m_Location = value; }
+            set { m_Location = SubstituteAppSetting(value); }
         }
 
         public bool Debug
@@ -62,7 +57,7 @@ namespace log4net.Appender
 
         private void createSocket(String key, String location)
         {
-            this.encoding = new System.Text.UTF8Encoding();
+            this.encoding = new System.Text.ASCIIEncoding();
             this.leSocket = new TcpClient("api.logentries.com", 443);
             this.leSocket.NoDelay = true;
             this.sslSock = new SslStream(this.leSocket.GetStream());
@@ -147,6 +142,23 @@ namespace log4net.Appender
                 System.Diagnostics.Debug.WriteLine(msg);
                 Console.Error.WriteLine(msg);
             }
+        }
+
+        private static string SubstituteAppSetting(string potentialKey)
+        {
+            var isWrappedPattern = new Regex(@"^\$AppSetting\{(.*)\}$");
+
+            var matches = isWrappedPattern.Matches(potentialKey);
+            if (matches.Count == 1)
+            {
+                var settingKey = matches[0].Groups[1].Value;
+                var appSettings = ConfigurationManager.AppSettings;
+                if (appSettings.HasKeys() && appSettings.AllKeys.Contains(settingKey))
+                {
+                    return appSettings[settingKey];
+                }
+            }
+            return potentialKey;
         }
     }
 }
