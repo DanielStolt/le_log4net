@@ -65,6 +65,10 @@ the opening  `<configuration>`
     <configSections>
         <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
+    <appSettings>
+      <add key="LOGENTRIES_ACCOUNT_KEY" value="" />
+      <add key="LOGENTRIES_LOCATION" value="" />
+    </appSettings>
     <log4net>
       <appender name="LeAppender" type="log4net.Appender.LeAppender, LeLog4net">
         <Key value="LOGENTRIES_ACCOUNT_KEY" />
@@ -80,7 +84,7 @@ the opening  `<configuration>`
       </root>
     </log4net>
 
-Replace the value "LOGENTRIES_ACCOUNT_KEY" with your account-key obtained earlier. Also replace the "LOGENTRIES_LOCATION" value. The value you provide here will appear in your Logentries account and will be used to identify your machine and log events. This should be in the following format:
+In the appSettings subsection, using your account-key which you obtained earlier, fill in the value for LOGENTRIES_ACCOUNT_KEY. Also replace the "LOGENTRIES_LOCATION" value with the location of your logfile on Logentries. This should be in the following format:
 
     hostname/logname.log    
 
@@ -92,7 +96,7 @@ https://github.com/downloads/logentries/le_log4net/getkey.zip
 
 Run it as follows:   getKey.exe --register
 
-Now place the following line in your `AssemblyInfo.cs` file:
+Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
 
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="Web.config",Watch=true)]
 
