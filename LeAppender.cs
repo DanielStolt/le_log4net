@@ -146,6 +146,8 @@ namespace log4net.Appender
 
         private static string SubstituteAppSetting(string potentialKey)
         {
+            /* This method isn't working, temporary fix below
+             * 
             var isWrappedPattern = new Regex(@"^\$AppSetting\{(.*)\}$");
 
             var matches = isWrappedPattern.Matches(potentialKey);
@@ -159,6 +161,16 @@ namespace log4net.Appender
                 }
             }
             return potentialKey;
+             */
+            var appSettings = ConfigurationManager.AppSettings;
+            if (appSettings.HasKeys() && appSettings.AllKeys.Contains(potentialKey))
+            {
+                return appSettings[potentialKey];
+            }
+            else
+            {
+                return potentialKey;
+            }
         }
     }
 }
