@@ -58,8 +58,10 @@ If using this option, please make sure to install Log4Net appropriately.
 LoggerConf
 ------------------
 
-The following configuration needs to be placed in your web.config file directly underneath
+The following configuration is placed in your web/app.config automatically by our Nuget.
+However if a web/app config does not exist when you install the Nuget, you must do it manually.
 
+If you are not using the Nuget, copy and paste it directly under
 the opening  `<configuration>`
  
     <configSections>
@@ -85,6 +87,8 @@ the opening  `<configuration>`
       </root>
     </log4net>
 
+If are using App.config in your project, you will need to set the "Copy to output Directory" property of App.config
+to "Copy always". This can be done inside Visual Studio.
 In the appSettings subsection, using your account-key which you obtained earlier, fill in the value for LOGENTRIES_ACCOUNT_KEY. Also replace the "LOGENTRIES_LOCATION" value with the location of your logfile on Logentries. This should be in the following format:
 
     hostname/logname.log    
@@ -99,8 +103,11 @@ Run it as follows:   getKey.exe --register
 
 Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
 
+For Web apps
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="Web.config",Watch=true)]
 
+For Console apps
+    [assembly: log4net.Config.XmlConfigurator(ConfigFile="App.config",Watch=true)]
 
 Logging Messages
 ----------------
