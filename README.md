@@ -49,7 +49,7 @@ This will also install Log4Net into your project if it is not already installed.
 
 If you're not using Nuget, the library can be downloaded from:
 
-https://github.com/downloads/logentries/le_log4net/LeLog4net.dll
+https://github.com/downloads/MarkLC/le_log4net_async/LeLog4net.dll
 
 It will need to be referenced in your project.
 
@@ -74,6 +74,7 @@ the opening  `<configuration>`
         <Key value="LOGENTRIES_ACCOUNT_KEY" />
         <Location value="LOGENTRIES_LOCATION" />
         <Debug value="true" />
+	  <Ssl value="false" />
         <layout type="log4net.Layout.PatternLayout">
           <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m" />
         </layout>
@@ -127,4 +128,3 @@ Example:
     log.Debug("Debugging Message");
     log.Info("Informational message");
     log.Warn("Warning Message");
-
