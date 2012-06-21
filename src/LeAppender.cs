@@ -58,6 +58,8 @@ namespace log4net.Appender
         public static readonly int QUEUE_SIZE = 32768;
         /** Logentries API server address. */
         static readonly String LE_API = "api.logentries.com";
+        /** Logentries Client Authentication */
+        static readonly String LE_AUTH_CLIENT = "logentries.com";
         /** Default port number for Logentries API server. */
         static readonly int LE_PORT = 80;
         /** Default SSL port number for Logentries API server. */
@@ -354,7 +356,7 @@ namespace log4net.Appender
                 if (Ssl)
                 {
                     this.stream_ssl = new SslStream(this.stream);
-                    this.stream_ssl.AuthenticateAsClient("logentries.com");
+                    this.stream_ssl.AuthenticateAsClient(LE_AUTH_CLIENT);
                 }
             }
 
