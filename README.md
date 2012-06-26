@@ -109,9 +109,11 @@ Run it as follows:   getKey.exe --register
 Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
 
 For Web apps
+
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="Web.config",Watch=true)]
 
 For Console apps
+
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="App.config",Watch=true)]
 
 Logging Messages
