@@ -98,7 +98,7 @@ In the appSettings subsection, using your account-key which you obtained earlier
 
     hostname/logname.log    
 
-If you would rather create a host and log  file from your command line instead of the Logentries UI,
+If you would rather create a host and log file from your command line instead of the Logentries UI,
 
 you can use the following program: 
 
