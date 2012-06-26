@@ -28,6 +28,11 @@ Simple Usage Example
     
 ------------------------
 
+A Sample Hello World App can be found in the download section. This simply requires you to enter your LOGENTRIES_ACCOUNT_KEY
+and LOGENTRIES_LOCATION in the appSettings section of web/app.config. This is explained in more detail in the instructions below.
+
+------------------------
+
 To configure Log4Net, you will need to perform the following:
 
     * (1) Obtain your Logentries account key.
@@ -93,7 +98,7 @@ In the appSettings subsection, using your account-key which you obtained earlier
 
     hostname/logname.log    
 
-If you would rather create a host and log from your command line instead of the Logentries UI,
+If you would rather create a host and log  file from your command line instead of the Logentries UI,
 
 you can use the following program: 
 
