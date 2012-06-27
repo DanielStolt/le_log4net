@@ -306,21 +306,22 @@ namespace log4net.Appender
         private void WriteDebugMessages(string message, Exception e)
         {
             message = LE + message;
-            if (!Debug) return;
+            if (!Debug) 
+               return;
             string[] messages = {message, e.ToString()};
             foreach (var msg in messages)
             {
-                System.Diagnostics.Debug.WriteLine(msg);
-                Console.Error.WriteLine(msg);
+                LogLog.Debug(typeof(LeAppender), msg);
             }
         }
 
         private void WriteDebugMessages(string message)
         {
             message = LE + message;
-            if (!Debug) return;
-            System.Diagnostics.Debug.WriteLine(message);
-            Console.Error.WriteLine(message);
+            if (!Debug) 
+               return;
+            
+	    LogLog.Debug(typeof(LeAppender), msg);
         }
 
         private static string SubstituteAppSetting(string potentialKey)
