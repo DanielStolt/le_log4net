@@ -75,6 +75,7 @@ the opening  `<configuration>`
     <appSettings>
       <add key="LOGENTRIES_ACCOUNT_KEY" value="" />
       <add key="LOGENTRIES_LOCATION" value="" />
+      <add key="log4net.Internal.Debug" value="" />
     </appSettings>
     <log4net>
       <appender name="LeAppender" type="log4net.Appender.LeAppender, LeLog4net">
