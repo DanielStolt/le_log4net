@@ -143,3 +143,10 @@ Example:
     log.Debug("Debugging Message");
     log.Info("Informational message");
     log.Warn("Warning Message");
+    
+Troubleshooting
+----------------
+
+The Logentries Plugin logs its debug messages to log4net's internal logger. This is enabled in your web/app.config by default and can be disabled
+by changing the `log4net.Internal.Debug` in the `<appSettings>` section to false. If you would like to keep log4net debug enabled, but disable Logentries
+debug messages, then change the debug parameter inside the `<log4net>` section to false.
