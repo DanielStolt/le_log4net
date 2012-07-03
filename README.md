@@ -39,9 +39,9 @@ To configure Log4Net, you will need to perform the following:
     * (2) Setup Log4Net (if you are not already using it).
     * (3) Configure the Logentries Log4Net plugin.
 
-You can obtain your Logentries account key on the Logentries UI, by clicking account in the top left corner
+You can obtain your Logentries account key on the Logentries UI, by clicking account in the bottom left corner.
 
-and then display account key on the right.
+It's displayed in grey on the right hand side.
 
 Logentries Log4net Plugin Setup
 --------------------------------
@@ -103,9 +103,7 @@ If you would rather create a host and log file from your command line instead of
 
 you can use the following program: 
 
-https://github.com/downloads/logentries/le_log4net/getkey.zip
-
-Run it as follows:   getKey.exe --register
+https://github.com/downloads/logentries/le_log4net/register.exe
 
 Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
 
