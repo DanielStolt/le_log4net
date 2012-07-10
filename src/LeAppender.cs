@@ -143,7 +143,7 @@ namespace log4net.Appender
             {
                 this.socket = new MyTcpClient(LE_API, this.Ssl);
 
-                String header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", SubstituteAppSetting(Key), SubstituteAppSetting(Location));
+                String header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", SubstituteAppSetting(CONFIG_KEY), SubstituteAppSetting(CONFIG_LOCATION));
                 this.socket.Write(ASCII.GetBytes(header), 0, header.Length);
             }
             catch
@@ -324,16 +324,16 @@ namespace log4net.Appender
 	    LogLog.Debug(typeof(LeAppender), msg);
         }
 
-        private static string SubstituteAppSetting(string potentialKey)
+        private static string SubstituteAppSetting(string key)
         {
             var appSettings = ConfigurationManager.AppSettings;
-            if (appSettings.HasKeys() && appSettings.AllKeys.Contains(potentialKey))
+            if (appSettings.HasKeys() && appSettings.AllKeys.Contains(key))
             {
-                return appSettings[potentialKey];
+                return appSettings[Key];
             }
             else
             {
-                return potentialKey;
+                return key;
             }
         }
 
