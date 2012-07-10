@@ -45,6 +45,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Threading;
 using log4net.Core;
+using log4net.Util;
 
 namespace log4net.Appender
 {
@@ -90,24 +91,10 @@ namespace log4net.Appender
         public BlockingCollection<Byte[]> queue;
 
         /** Logentries Parameters */
-        private String m_Key;
-        private String m_Location;
         private bool m_Debug;
         private bool m_Ssl;
 
         #region Public Instance Properties
-
-        public string Key
-        {
-            get { return m_Key; }
-            set { m_Key = SubstituteAppSetting(value); }
-        }
-
-        public string Location
-        {
-            get { return m_Location; }
-            set { m_Location = SubstituteAppSetting(value); }
-        }
 
         public bool Debug
         {
@@ -143,7 +130,7 @@ namespace log4net.Appender
             {
                 this.socket = new MyTcpClient(LE_API, this.Ssl);
 
-                String header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", SubstituteAppSetting(Key), SubstituteAppSetting(Location));
+                String header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", SubstituteAppSetting(CONFIG_KEY), SubstituteAppSetting(CONFIG_LOCATION));
                 this.socket.Write(ASCII.GetBytes(header), 0, header.Length);
             }
             catch
@@ -321,19 +308,19 @@ namespace log4net.Appender
             if (!Debug) 
                return;
             
-	    LogLog.Debug(typeof(LeAppender), msg);
+	        LogLog.Debug(typeof(LeAppender), message);
         }
 
-        private static string SubstituteAppSetting(string potentialKey)
+        private static string SubstituteAppSetting(string key)
         {
             var appSettings = ConfigurationManager.AppSettings;
-            if (appSettings.HasKeys() && appSettings.AllKeys.Contains(potentialKey))
+            if (appSettings.HasKeys() && appSettings.AllKeys.Contains(key))
             {
-                return appSettings[potentialKey];
+                return appSettings[key];
             }
             else
             {
-                return potentialKey;
+                return key;
             }
         }
 
