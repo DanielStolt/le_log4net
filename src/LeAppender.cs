@@ -45,6 +45,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Threading;
 using log4net.Core;
+using log4net.Util;
 
 namespace log4net.Appender
 {
@@ -90,24 +91,10 @@ namespace log4net.Appender
         public BlockingCollection<Byte[]> queue;
 
         /** Logentries Parameters */
-        private String m_Key;
-        private String m_Location;
         private bool m_Debug;
         private bool m_Ssl;
 
         #region Public Instance Properties
-
-        public string Key
-        {
-            get { return m_Key; }
-            set { m_Key = SubstituteAppSetting(value); }
-        }
-
-        public string Location
-        {
-            get { return m_Location; }
-            set { m_Location = SubstituteAppSetting(value); }
-        }
 
         public bool Debug
         {
@@ -321,7 +308,7 @@ namespace log4net.Appender
             if (!Debug) 
                return;
             
-	    LogLog.Debug(typeof(LeAppender), msg);
+	        LogLog.Debug(typeof(LeAppender), message);
         }
 
         private static string SubstituteAppSetting(string key)
@@ -329,7 +316,7 @@ namespace log4net.Appender
             var appSettings = ConfigurationManager.AppSettings;
             if (appSettings.HasKeys() && appSettings.AllKeys.Contains(key))
             {
-                return appSettings[Key];
+                return appSettings[key];
             }
             else
             {
