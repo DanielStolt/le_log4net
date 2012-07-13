@@ -26,12 +26,8 @@ Simple Usage Example
         }
     }
     
-------------------------
 
-A Sample Hello World App can be found in the download section. This simply requires you to enter your LOGENTRIES_ACCOUNT_KEY
-and LOGENTRIES_LOCATION in the appSettings section of web/app.config. This is explained in more detail in the instructions below.
-
-------------------------
+A Sample Hello World App can be found in the download section. This simply requires you to enter your `LOGENTRIES_ACCOUNT_KEY` and `LOGENTRIES_LOCATION` in the appSettings section of `web/app.config`. This is explained in more detail in the instructions below.
 
 To configure Log4Net, you will need to perform the following:
 
@@ -48,7 +44,7 @@ Logentries Log4net Plugin Setup
 
 To install the Logentries Plugin Library, we suggest using Nuget.
 
-The package is found at https://nuget.org/List/Packages/le_log4net
+The package is found at <https://nuget.org/List/Packages/le_log4net>
 
 This will also install Log4Net into your project if it is not already installed.
 
@@ -57,14 +53,13 @@ If you wish to install it manually, you can find LeLog4net.dll in the downloads 
 If using this option, please make sure to install Log4Net appropriately. 
 
 LoggerConf
-------------------
+----------
 
-The following configuration is placed in your web/app.config automatically by our Nuget.
-However if a web/app config does not exist when you install the Nuget, you must do it manually.
+The following configuration is placed in your `web/app.config` automatically by our Nuget. However if a `web/app` config does not exist when you install the Nuget, you must do it manually.
 
 If you are not using the Nuget, copy and paste it directly under
 the opening  `<configuration>`
- 
+
     <configSections>
         <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
@@ -87,25 +82,21 @@ the opening  `<configuration>`
       </root>
     </log4net>
 
-If are using App.config in your project, you will need to set the "Copy to output Directory" property of App.config
-to "Copy always". This can be done inside Visual Studio.
-In the appSettings subsection, using your account-key which you obtained earlier, fill in the value for LOGENTRIES_ACCOUNT_KEY. Also replace the "LOGENTRIES_LOCATION" value with the location of your logfile on Logentries. This should be in the following format:
+If are using App.config in your project, you will need to set the "Copy to output Directory" property of `App.config` to "Copy always". This can be done inside Visual Studio. In the appSettings subsection, using your account-key which you obtained earlier, fill in the value for `LOGENTRIES_ACCOUNT_KEY`. Also replace the `LOGENTRIES_LOCATION` value with the location of your logfile on Logentries. This should be in the following format:
 
-    hostname/logname.log    
+    hostname/logname.log
 
-If you would rather create a host and log file from your command line instead of the Logentries UI,
+If you would rather create a host and log file from your command line instead of the Logentries UI, you can use the following program:
 
-you can use the following program: 
-
-https://github.com/downloads/logentries/le_log4net/register.exe
+    https://github.com/downloads/logentries/le_log4net/register.exe
 
 Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
 
-For Web apps
+For Web apps:
 
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="Web.config",Watch=true)]
 
-For Console apps
+For Console apps:
 
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="App.config",Watch=true)]
 
@@ -127,21 +118,18 @@ Be sure to enter the name of current class in the indicated brackets above.
 What this does is create a logger with the name of the current class for
 clarity in the logs.
 
-Now within your code in that class, you can log using log4net as normal and it
-will log to Logentries.
+Now within your code in that class, you can log using log4net as normal and it will log to Logentries.
 
 Example:
 
     log.Debug("Debugging Message");
     log.Info("Informational message");
     log.Warn("Warning Message");
-    
+
 Troubleshooting
 ----------------
 
-The Logentries Plugin logs its debug messages to log4net's internal logger. This is enabled in your web/app.config by default and can be disabled
-by changing the `log4net.Internal.Debug` in the `<appSettings>` section to false. If you would like to keep log4net debug enabled, but disable Logentries
-debug messages, then change the debug parameter inside the `<log4net>` section to false.
+The Logentries Plugin logs its debug messages to log4net's internal logger. This is enabled in your `web/app.config` by default and can be disabled by changing the `log4net.Internal.Debug` in the `<appSettings>` section to false. If you would like to keep log4net debug enabled, but disable Logentries debug messages, then change the debug parameter inside the `<log4net>` section to false.
 
-You can also download a hello world sample app from the Downloads section. It is ready to go and only needs LOGENTRIES_ACCOUNT_KEY
-and LOGENTRIES_LOCATION to be entered into the web.config
+You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_ACCOUNT_KEY` and `LOGENTRIES_LOCATION` to be entered into the `web.config`.
+
