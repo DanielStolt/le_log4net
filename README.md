@@ -89,8 +89,11 @@ If are using App.config in your project, you will need to set the "Copy to outpu
 If you would rather create a host and log file from your command line instead of the Logentries UI, you can use the following program:
 
     https://github.com/downloads/logentries/le_log4net/register.exe
+    
+AssemblyInfo.cs
+-------------------
 
-Finally place the following line in your `AssemblyInfo.cs` file as is required to use log4net:
+Finally place the following line in your `AssemblyInfo.cs` file as log4net needs to be explicitly told what the config file is called:
 
 For Web apps:
 
@@ -133,3 +136,4 @@ The Logentries Plugin logs its debug messages to log4net's internal logger. This
 
 You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_ACCOUNT_KEY` and `LOGENTRIES_LOCATION` to be entered into the `web.config`.
 
+Ensure that you followed the section of this readme regarding your AssemblyInfo.cs file.
