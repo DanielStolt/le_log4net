@@ -271,6 +271,7 @@ namespace log4net.Appender
         protected override void OnClose()
         {
             thread.Interrupt();
+	    started = false;
         }
 
         public bool checkCredentials()
