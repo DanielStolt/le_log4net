@@ -130,6 +130,6 @@ Troubleshooting
 
 The Logentries Plugin logs its debug messages to log4net's internal logger. This is enabled in your `web/app.config` by default and can be disabled by changing the `log4net.Internal.Debug` in the `<appSettings>` section to false. If you would like to keep log4net debug enabled, but disable Logentries debug messages, then change the debug parameter inside the `<log4net>` section to false.
 
-You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_TOKEN` to be entered into the `web.config`.
+You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_TOKEN` to be entered into the `Web/App.config`.
 
 Ensure that you followed the section of this readme regarding your AssemblyInfo.cs file.
