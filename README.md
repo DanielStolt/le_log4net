@@ -27,17 +27,22 @@ Simple Usage Example
     }
     
 
-A Sample Hello World App can be found in the download section. This simply requires you to enter your `LOGENTRIES_ACCOUNT_KEY` and `LOGENTRIES_LOCATION` in the appSettings section of `web/app.config`. This is explained in more detail in the instructions below.
+A Sample Hello World App can be found in the download section. This simply
+requires you to enter your `LOGENTRIES_TOKEN` in the appSettings section of `web/app.config`. This is explained in more
+detail in the instructions below.
 
-To configure Log4Net, you will need to perform the following:
+To configure NLog, you will need to perform the following:
 
-    * (1) Obtain your Logentries account key.
-    * (2) Setup Log4Net (if you are not already using it).
-    * (3) Configure the Logentries Log4Net plugin.
+    * (1) Create a Logentries Account.
+    * (2) Setup NLog (if you are not already using it).
+    * (3) Configure the Logentries NLog plugin.
 
-You can obtain your Logentries account key on the Logentries UI, by clicking account in the bottom left corner.
 
-It's displayed in grey on the right hand side.
+Create your Logentries Account
+------------------------------
+You can register your account on Logentries simply by clicking `Sign Up` at the top of the screen.
+Once logged in, create a new host with a name that best represents your app. Select this host and create a 
+new logfile of source type `TOKEN TCP` with a name that represents what you will be logging, these names are for your own benefit.
 
 Logentries Log4net Plugin Setup
 --------------------------------
@@ -52,26 +57,21 @@ If you wish to install it manually, you can find LeLog4net.dll in the downloads 
 
 If using this option, please make sure to install Log4Net appropriately. 
 
-LoggerConf
-----------
+Log4Net Config
+---------------
 
-The following configuration is placed in your `web/app.config` automatically by our Nuget. However if a `web/app` config does not exist when you install the Nuget, you must do it manually.
+In the `<appSettings>` section of your `Web/App.config`, replace `LOGENTRIES_TOKEN` with the 
+token that is printed in grey beside the logfile you created in the Logentries UI.
 
-If you are not using the Nuget, copy and paste it directly under
-the opening  `<configuration>`
+To configure NLog along with the plug-in, paste the following into your `Web/App.config` directly underneath the opening
+`<configuration>`
 
     <configSections>
         <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
-    <appSettings>
-      <add key="LOGENTRIES_ACCOUNT_KEY" value="" />
-      <add key="LOGENTRIES_LOCATION" value="" />
-      <add key="log4net.Internal.Debug" value="" />
-    </appSettings>
     <log4net>
       <appender name="LeAppender" type="log4net.Appender.LeAppender, LeLog4net">
         <Debug value="true" />
-	  <Ssl value="false" />
         <layout type="log4net.Layout.PatternLayout">
           <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m" />
         </layout>
@@ -82,13 +82,9 @@ the opening  `<configuration>`
       </root>
     </log4net>
 
-If are using App.config in your project, you will need to set the "Copy to output Directory" property of `App.config` to "Copy always". This can be done inside Visual Studio. In the appSettings subsection, using your account-key which you obtained earlier, fill in the value for `LOGENTRIES_ACCOUNT_KEY`. Also replace the `LOGENTRIES_LOCATION` value with the location of your logfile on Logentries. This should be in the following format:
-
-    hostname/logname.log
-
-If you would rather create a host and log file from your command line instead of the Logentries UI, you can use the following program:
-
-    https://github.com/downloads/logentries/le_log4net/register.exe
+If you are using App.config in your project, you will need to set the "Copy to
+output Directory" property of App.config to "Copy always". This can be done
+inside Visual Studio. 
     
 AssemblyInfo.cs
 -------------------
@@ -134,6 +130,6 @@ Troubleshooting
 
 The Logentries Plugin logs its debug messages to log4net's internal logger. This is enabled in your `web/app.config` by default and can be disabled by changing the `log4net.Internal.Debug` in the `<appSettings>` section to false. If you would like to keep log4net debug enabled, but disable Logentries debug messages, then change the debug parameter inside the `<log4net>` section to false.
 
-You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_ACCOUNT_KEY` and `LOGENTRIES_LOCATION` to be entered into the `web.config`.
+You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_TOKEN` to be entered into the `web.config`.
 
 Ensure that you followed the section of this readme regarding your AssemblyInfo.cs file.
