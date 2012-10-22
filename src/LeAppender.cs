@@ -83,6 +83,7 @@ namespace log4net.Appender
         public Thread thread;
         public bool started = false;
         private String token = null;
+        private char[] trimChars = { '\n' };
         /** Message Queue */
         public BlockingCollection<Byte[]> queue;
 
@@ -241,7 +242,14 @@ namespace log4net.Appender
             }
 
             //Append message content
-            addLine(RenderLoggingEvent(loggingEvent));
+            String renderedEvent = RenderLoggingEvent(loggingEvent);
+
+            renderedEvent = renderedEvent.TrimEnd(trimChars);
+
+            //Replace newline with line separator for compatability with Logentries
+            renderedEvent = renderedEvent.Replace('\n', '\u2028');
+
+            addLine(renderedEvent);
  
         }
 
