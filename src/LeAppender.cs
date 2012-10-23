@@ -246,11 +246,11 @@ namespace log4net.Appender
 
             renderedEvent = renderedEvent.TrimEnd(trimChars);
 
-            //Replace newline with line separator for compatability with Logentries
+            //Replace newline with line separator to maintain formatting
             renderedEvent = renderedEvent.Replace('\n', '\u2028');
 
             addLine(renderedEvent);
- 
+
         }
 
         protected override void Append(LoggingEvent[] loggingEvents)
@@ -310,7 +310,7 @@ namespace log4net.Appender
             message = LE + message;
             if (!Debug) 
                return;
-            
+
 	        LogLog.Debug(typeof(LeAppender), message);
         }
 
