@@ -73,7 +73,7 @@ To configure NLog along with the plug-in, paste the following into your `Web/App
       <appender name="LeAppender" type="log4net.Appender.LeAppender, LeLog4net">
         <Debug value="true" />
         <layout type="log4net.Layout.PatternLayout">
-          <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m, %stacktrace{1}" />
+          <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m" />
         </layout>
       </appender>
       <root>
