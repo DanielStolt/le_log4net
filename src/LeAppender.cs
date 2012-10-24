@@ -241,7 +241,7 @@ namespace log4net.Appender
                 started = true;
             }
 
-            //Append message content
+            //Render message content
             String renderedEvent = RenderLoggingEvent(loggingEvent);
 
             renderedEvent = renderedEvent.TrimEnd(trimChars);
