@@ -31,11 +31,11 @@ A Sample Hello World App can be found in the download section. This simply
 requires you to enter your `LOGENTRIES_TOKEN` in the appSettings section of `web/app.config`. This is explained in more
 detail in the instructions below.
 
-To configure NLog, you will need to perform the following:
+To configure Log4Net, you will need to perform the following:
 
     * (1) Create a Logentries Account.
-    * (2) Setup NLog (if you are not already using it).
-    * (3) Configure the Logentries NLog plugin.
+    * (2) Setup Log4Net (if you are not already using it).
+    * (3) Configure the Logentries Log4Net plugin.
 
 
 Create your Logentries Account
@@ -63,7 +63,7 @@ Log4Net Config
 In the `<appSettings>` section of your `Web/App.config`, replace `LOGENTRIES_TOKEN` with the 
 token that is printed in grey beside the logfile you created in the Logentries UI.
 
-To configure NLog along with the plug-in, paste the following into your `Web/App.config` directly underneath the opening
+To configure Log4Net along with the plug-in, paste the following into your `Web/App.config` directly underneath the opening
 `<configuration>`
 
     <configSections>
