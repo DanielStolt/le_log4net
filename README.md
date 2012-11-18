@@ -67,7 +67,7 @@ To configure Log4Net along with the plug-in, paste the following into your `Web/
         <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
     <log4net>
-      <appender name="LeAppender" type="log4net.Appender.LogentriesAppender, LeLog4net">
+      <appender name="LogentriesAppender" type="log4net.Appender.LogentriesAppender, LeLog4net">
         <Debug value="true" />
         <HttpPut value="false" />
         <Ssl value="false" />
@@ -77,7 +77,7 @@ To configure Log4Net along with the plug-in, paste the following into your `Web/
       </appender>
       <root>
         <level value="ALL" />
-        <appender-ref ref="LeAppender" />
+        <appender-ref ref="LogentriesAppender" />
       </root>
     </log4net>
 
