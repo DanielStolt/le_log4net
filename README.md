@@ -25,11 +25,7 @@ Simple Usage Example
             return View();
         }
     }
-    
 
-A Sample Hello World App can be found in the download section. This simply
-requires you to enter your `LOGENTRIES_TOKEN` in the appSettings section of `web/app.config`. This is explained in more
-detail in the instructions below.
 
 To configure Log4Net, you will need to perform the following:
 
@@ -70,8 +66,9 @@ To configure Log4Net along with the plug-in, paste the following into your `Web/
         <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
     <log4net>
-      <appender name="LeAppender" type="log4net.Appender.LeAppender, LeLog4net">
+      <appender name="LeAppender" type="log4net.Appender.LogentriesAppender, LeLog4net">
         <Debug value="true" />
+	<HttpPut value="false" />
         <layout type="log4net.Layout.PatternLayout">
           <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m, " />
         </layout>
