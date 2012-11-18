@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.2
+ *   VERSION:  2.3.3
  */
 
 
@@ -47,6 +47,7 @@ using System.Text;
 ﻿using System.Net.Security;
 using System.Net.Sockets;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using log4net.Core;
 using log4net.Util;
@@ -60,15 +61,19 @@ namespace log4net.Appender
          */
 
         /** Current version number  */
-        public const String VERSION = "2.3.2";
+        public const String VERSION = "2.3.3";
         /** Size of the internal event queue. */
         const int QUEUE_SIZE = 32768;
         /** Logentries API server address. */
         const String LE_API = "api.logentries.com";
         /** Port number for token logging on Logentries API server. */
         const int LE_TOKEN_PORT = 10000;
+        /** Port number for TLS encrypted token logging on Logentries API server */
+        const int LE_TOKEN_TLS_PORT = 20000;
         /** Port number for http PUT logging on Logentries API server. */
         const int LE_HTTP_PORT = 80;
+        /** Port number for SSL HTTP PUT logging on Logentries API server. */
+        const int LE_HTTP_SSL_PORT = 443;
         /** UTF-8 output character set. */
         static readonly UTF8Encoding UTF8 = new UTF8Encoding();
         /** ASCII character set used by HTTP. */
@@ -90,6 +95,39 @@ namespace log4net.Appender
         /** Error message displayed when invalid account_key or location parameters are detected */
         const String INVALID_HTTP_PUT = "\n\nIt appears your LOGENTRIES_ACCOUNT_KEY or LOGENTRIES_LOCATION parameters in web/app.config are invalid!\n\n";
 
+        /** Logentries API Server Certificate */
+        static readonly X509Certificate2 LE_API_CERT = new X509Certificate2(Encoding.UTF8.GetBytes(@"-----BEGIN CERTIFICATE-----
+MIIFSjCCBDKgAwIBAgIDBQMSMA0GCSqGSIb3DQEBBQUAMGExCzAJBgNVBAYTAlVT
+MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMR0wGwYDVQQLExREb21haW4gVmFsaWRh
+dGVkIFNTTDEbMBkGA1UEAxMSR2VvVHJ1c3QgRFYgU1NMIENBMB4XDTEyMDkxMDE5
+NTI1N1oXDTE2MDkxMTIxMjgyOFowgcExKTAnBgNVBAUTIEpxd2ViV3RxdzZNblVM
+ek1pSzNiL21hdktiWjd4bEdjMRMwEQYDVQQLEwpHVDAzOTM4NjcwMTEwLwYDVQQL
+EyhTZWUgd3d3Lmdlb3RydXN0LmNvbS9yZXNvdXJjZXMvY3BzIChjKTEyMS8wLQYD
+VQQLEyZEb21haW4gQ29udHJvbCBWYWxpZGF0ZWQgLSBRdWlja1NTTChSKTEbMBkG
+A1UEAxMSYXBpLmxvZ2VudHJpZXMuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAxcmFqgE2p6+N9lM2GJhe8bNUO0qmcw8oHUVrsneeVA66hj+qKPoJ
+AhGKxC0K9JFMyIzgPu6FvuVLahFZwv2wkbjXKZLIOAC4o6tuVb4oOOUBrmpvzGtL
+kKVN+sip1U7tlInGjtCfTMWNiwC4G9+GvJ7xORgDpaAZJUmK+4pAfG8j6raWgPGl
+JXo2hRtOUwmBBkCPqCZQ1mRETDT6tBuSAoLE1UMlxWvMtXCUzeV78H+2YrIDxn/W
+xd+eEvGTSXRb/Q2YQBMqv8QpAlarcda3WMWj8pkS38awyBM47GddwVYBn5ZLEu/P
+DiRQGSmLQyFuk5GUdApSyFETPL6p9MfV4wIDAQABo4IBqDCCAaQwHwYDVR0jBBgw
+FoAUjPTZkwpHvACgSs5LdW6gtrCyfvwwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNVHREEFjAUghJhcGkubG9nZW50cmll
+cy5jb20wQQYDVR0fBDowODA2oDSgMoYwaHR0cDovL2d0c3NsZHYtY3JsLmdlb3Ry
+dXN0LmNvbS9jcmxzL2d0c3NsZHYuY3JsMB0GA1UdDgQWBBRaMeKDGSFaz8Kvj+To
+j7eMOtT/zTAMBgNVHRMBAf8EAjAAMHUGCCsGAQUFBwEBBGkwZzAsBggrBgEFBQcw
+AYYgaHR0cDovL2d0c3NsZHYtb2NzcC5nZW90cnVzdC5jb20wNwYIKwYBBQUHMAKG
+K2h0dHA6Ly9ndHNzbGR2LWFpYS5nZW90cnVzdC5jb20vZ3Rzc2xkdi5jcnQwTAYD
+VR0gBEUwQzBBBgpghkgBhvhFAQc2MDMwMQYIKwYBBQUHAgEWJWh0dHA6Ly93d3cu
+Z2VvdHJ1c3QuY29tL3Jlc291cmNlcy9jcHMwDQYJKoZIhvcNAQEFBQADggEBAAo0
+rOkIeIDrhDYN8o95+6Y0QhVCbcP2GcoeTWu+ejC6I9gVzPFcwdY6Dj+T8q9I1WeS
+VeVMNtwJt26XXGAk1UY9QOklTH3koA99oNY3ARcpqG/QwYcwaLbFrB1/JkCGcK1+
+Ag3GE3dIzAGfRXq8fC9SrKia+PCdDgNIAFqe+kpa685voTTJ9xXvNh7oDoVM2aip
+v1xy+6OfZyGudXhXag82LOfiUgU7hp+RfyUG2KXhIRzhMtDOHpyBjGnVLB0bGYcC
+566Nbe7Alh38TT7upl/O5lA29EoSkngtUWhUnzyqYmEMpay8yZIV4R9AuUk2Y4HB
+kAuBvDPPm+C0/M4RLYs=
+-----END CERTIFICATE-----"));
+
         readonly Random random = new Random();
 
         /** Custom socket class to allow for choice of Token-based logging and HTTP PUT */
@@ -106,6 +144,8 @@ namespace log4net.Appender
         private String m_Location = "";
         /** Logentries HTTP PUT flag parameter */
         private bool m_HttpPut = false;
+        /** Logentries SSL/TLS flag parameter */
+        private bool m_Ssl = false;
         /** Message Queue. */
         public BlockingCollection<string> queue;
         /** Newline char to trim from message for formatting */
@@ -150,6 +190,13 @@ namespace log4net.Appender
             set { m_Location = value; }
         }
 
+        /** SSL/TLS parameter */
+        public bool Ssl
+        {
+            get { return m_Ssl; }
+            set { m_Ssl = value; }
+        }
+
         #endregion
 
         #region Constructor
@@ -170,7 +217,7 @@ namespace log4net.Appender
             try
             {
                 if (this.tcp_client == null)
-                    this.tcp_client = new LogentriesTcpClient(HttpPut);
+                    this.tcp_client = new LogentriesTcpClient(HttpPut, Ssl);
 
                 this.tcp_client.Connect();
 
@@ -411,16 +458,27 @@ namespace log4net.Appender
             }
         }
 
-        /** Custom Class to support both HTTP PUT and Token-based logging */
+        /** Custom Class to support both HTTP PUT and Token-based logging as well as TLS/SSL */
         private class LogentriesTcpClient
         {
             private TcpClient client = null;
             private Stream stream = null;
+            private SslStream ssl_stream = null;
+            private bool ssl_choice = false;
             private int port;
 
-            public LogentriesTcpClient(bool httpPut)
+            public LogentriesTcpClient(bool httpPut, bool ssl)
             {
-                port = httpPut ? LE_HTTP_PORT : LE_TOKEN_PORT;
+                ssl_choice = ssl;
+                if (!ssl)
+                    port = httpPut ? LE_HTTP_PORT : LE_TOKEN_PORT;
+                else
+                    port = httpPut ? LE_HTTP_SSL_PORT : LE_TOKEN_TLS_PORT;
+            }
+
+            private Stream getTheStream()
+            {
+                return ssl_choice ? ssl_stream : stream;
             }
 
             public void Connect()
@@ -429,16 +487,23 @@ namespace log4net.Appender
                 this.client.NoDelay = true;
 
                 this.stream = client.GetStream();
+
+                if (ssl_choice)
+                {
+                    this.ssl_stream = new SslStream(this.stream, false, (sender, cert, chain, errors) => cert.GetCertHashString() == LE_API_CERT.GetCertHashString());
+
+                    this.ssl_stream.AuthenticateAsClient(LE_API);
+                }
             }
 
             public void Write(byte[] buffer, int offset, int count)
             {
-                this.stream.Write(buffer, offset, count);
+                this.getTheStream().Write(buffer, offset, count);
             }
 
             public void Flush()
             {
-                this.stream.Flush();
+                this.getTheStream().Flush();
             }
 
             public void Close()

@@ -69,6 +69,7 @@ To configure Log4Net along with the plug-in, paste the following into your `Web/
       <appender name="LeAppender" type="log4net.Appender.LogentriesAppender, LeLog4net">
         <Debug value="true" />
         <HttpPut value="false" />
+        <Ssl value="false" />
         <layout type="log4net.Layout.PatternLayout">
           <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m, " />
         </layout>
@@ -95,6 +96,32 @@ For Web apps:
 For Console apps:
 
     [assembly: log4net.Config.XmlConfigurator(ConfigFile="App.config",Watch=true)]
+
+
+Token-Based Logging
+-------------------
+
+Our default method of sending logs to Logentries is via Token TCP over port 10000. To use this, create a new logfile in the Logentries UI, and select Token TCP as the source type.
+
+Then paste the token that is printed beside the logfile in the appSettings section of your web/app.config file for LOGENTRIES_TOKEN.
+
+
+HTTP PUT Logging
+----------------
+
+Older versions of this library used HTTP PUT over port 80, which is still supported. To use this, create a new logfile in the Logentries UI, and select api/HTTP PUT as the source type.
+
+Next, change the httpPut parameter in the above snippet to true. HTTP PUT requires two parameters called LOGENTRIES_ACCOUNT_KEY and LOGENTRIES_LOCATION in your appSettings to be set.
+
+You can obtain your account key, by Selecting Account on the left sidebar when logged in and clicking Account Key.
+
+Your LOGENTRIES_LOCATION parameter is the name of your host followed by the name of your logfile in the following format:  "hostName/logName"
+
+
+SSL/TLS
+-------
+This library supports SSL/TLS logging over both the above logging methods by setting the Ssl value to true in the appender definition. This may have a performance impact however.
+
 
 Logging Messages
 ----------------
