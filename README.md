@@ -38,7 +38,8 @@ Create your Logentries Account
 ------------------------------
 You can register your account on Logentries simply by clicking `Sign Up` at the top of the screen.
 Once logged in, create a new host with a name that best represents your app. Select this host and create a 
-new logfile of source type `TOKEN TCP` with a name that represents what you will be logging, these names are for your own benefit.
+new logfile of source type `TOKEN TCP` with a name that represents what you will be logging, these names are for your own benefit. Scroll down for instructions
+on setting up a logfile for HTTP PUT logging.
 
 Logentries Log4net Plugin Setup
 --------------------------------
