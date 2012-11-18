@@ -68,7 +68,7 @@ To configure Log4Net along with the plug-in, paste the following into your `Web/
     <log4net>
       <appender name="LeAppender" type="log4net.Appender.LogentriesAppender, LeLog4net">
         <Debug value="true" />
-	<HttpPut value="false" />
+        <HttpPut value="false" />
         <layout type="log4net.Layout.PatternLayout">
           <param name="ConversionPattern" value="%d{ddd MMM dd HH:mm:ss zzz yyyy} %logger %: %level%, %m, " />
         </layout>
