@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.3
+ *   VERSION:  2.3.4
  */
 
 
@@ -61,7 +61,7 @@ namespace log4net.Appender
          */
 
         /** Current version number  */
-        public const String VERSION = "2.3.3";
+        public const String VERSION = "2.3.4";
         /** Size of the internal event queue. */
         const int QUEUE_SIZE = 32768;
         /** Logentries API server address. */
@@ -288,6 +288,8 @@ kAuBvDPPm+C0/M4RLYs=
                 {
                     //Take data from queue
                     string line = queue.Take();
+                    //Replace newline chars with line separator to format multi-line events nicely
+                    line = line.Replace('\n', '\u2028');
 
                     string final_line = (!HttpPut ? this.Token + line : line) + '\n';
 
@@ -344,9 +346,6 @@ kAuBvDPPm+C0/M4RLYs=
             String renderedEvent = RenderLoggingEvent(loggingEvent);
 
             renderedEvent = renderedEvent.TrimEnd(trimChars);
-
-            //Replace newline with line separator to maintain formatting
-            renderedEvent = renderedEvent.Replace('\n', '\u2028');
 
             addLine(renderedEvent);
 
