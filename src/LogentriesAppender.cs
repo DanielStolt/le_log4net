@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.4
+ *   VERSION:  2.3.5
  */
 
 
@@ -61,7 +61,7 @@ namespace log4net.Appender
          */
 
         /** Current version number  */
-        public const String VERSION = "2.3.4";
+        public const String VERSION = "2.3.5";
         /** Size of the internal event queue. */
         const int QUEUE_SIZE = 32768;
         /** Logentries API server address. */
@@ -94,6 +94,8 @@ namespace log4net.Appender
         const String INVALID_TOKEN = "\n\nIt appears your LOGENTRIES_TOKEN parameter in web/app.config is invalid!\n\n";
         /** Error message displayed when invalid account_key or location parameters are detected */
         const String INVALID_HTTP_PUT = "\n\nIt appears your LOGENTRIES_ACCOUNT_KEY or LOGENTRIES_LOCATION parameters in web/app.config are invalid!\n\n";
+        /** Error message deisplayed when queue overflow occurs */
+        const String QUEUE_OVERFLOW = "\n\nLogentries Buffer Queue Overflow. Message Dropped!\n\n";
 
         /** Logentries API Server Certificate */
         static readonly X509Certificate2 LE_API_CERT = new X509Certificate2(Encoding.UTF8.GetBytes(@"-----BEGIN CERTIFICATE-----
@@ -323,13 +325,11 @@ kAuBvDPPm+C0/M4RLYs=
             WriteDebugMessages("Queueing " + line);
 
             //Try to append data to queue
-            bool is_full = !queue.TryAdd(line);
-
-            //If its full, remove latest item and try again
-            if (is_full)
+            if (!queue.TryAdd(line))
             {
                 queue.Take();
-                queue.TryAdd(line);
+                if (!queue.TryAdd(line))
+                    WriteDebugMessages(QUEUE_OVERFLOW);
             }
         }
 
@@ -430,6 +430,8 @@ kAuBvDPPm+C0/M4RLYs=
             string[] messages = {message, e.ToString()};
             foreach (var msg in messages)
             {
+                //Use below line instead when compiling with log4net1.2.10
+                //LogLog.Debug(msg);
                 LogLog.Debug(typeof(LogentriesAppender), msg);
             }
         }
@@ -441,6 +443,8 @@ kAuBvDPPm+C0/M4RLYs=
 
             message = LE + message;
 
+            //Use below line instead when compiling with log4net1.2.10
+            //LogLog.Debug(message);
 	        LogLog.Debug(typeof(LogentriesAppender), message);
         }
 
