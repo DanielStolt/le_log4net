@@ -291,7 +291,7 @@ kAuBvDPPm+C0/M4RLYs=
                     //Take data from queue
                     string line = queue.Take();
                     //Replace newline chars with line separator to format multi-line events nicely
-                    line = line.Replace(System.Environment.NewLine, '\u2028');
+                    line = line.Replace(System.Environment.NewLine, "\u2028");
 
                     string final_line = (!HttpPut ? this.Token + line : line) + '\n';
 
