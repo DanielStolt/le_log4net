@@ -37,18 +37,17 @@
  *   VERSION:  2.3.5
  */
 
-
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Configuration;
-﻿using System.Linq;
-﻿using System.Text.RegularExpressions;
-using System.Text;
-﻿using System.Net.Security;
-using System.Net.Sockets;
 using System.IO;
+using System.Linq;
+using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
+using log4net.Appender;
 using log4net.Core;
 using log4net.Util;
 
@@ -56,49 +55,66 @@ namespace log4net.Appender
 {
     public class LogentriesAppender : AppenderSkeleton
     {
-        /*
-         * Constants
-         */
+        #region Constants
 
-        /** Current version number  */
-        public const String VERSION = "2.3.5";
-        /** Size of the internal event queue. */
-        const int QUEUE_SIZE = 32768;
-        /** Logentries API server address. */
-        const String LE_API = "api.logentries.com";
-        /** Port number for token logging on Logentries API server. */
-        const int LE_TOKEN_PORT = 10000;
-        /** Port number for TLS encrypted token logging on Logentries API server */
-        const int LE_TOKEN_TLS_PORT = 20000;
-        /** Port number for http PUT logging on Logentries API server. */
-        const int LE_HTTP_PORT = 80;
-        /** Port number for SSL HTTP PUT logging on Logentries API server. */
-        const int LE_HTTP_SSL_PORT = 443;
-        /** UTF-8 output character set. */
-        static readonly UTF8Encoding UTF8 = new UTF8Encoding();
-        /** ASCII character set used by HTTP. */
-        static readonly ASCIIEncoding ASCII = new ASCIIEncoding();
-        /** Minimal delay between attempts to reconnect in milliseconds. */
-        const int MIN_DELAY = 100;
-        /** Maximal delay between attempts to reconnect in milliseconds. */
-        const int MAX_DELAY = 10000;
-        /** LE appender signature - used for debugging messages. */
-        const String LE = "LE: ";
-        /** Logentries Config Token */
-        const String CONFIG_TOKEN = "LOGENTRIES_TOKEN";
-        /** Logentries Config Account Key */
-        const String CONFIG_ACCOUNT_KEY = "LOGENTRIES_ACCOUNT_KEY";
-        /** Logentries Config Location */
-        const String CONFIG_LOCATION = "LOGENTRIES_LOCATION";
-        /** Error message displayed when invalid token is detected. */
-        const String INVALID_TOKEN = "\n\nIt appears your LOGENTRIES_TOKEN parameter in web/app.config is invalid!\n\n";
-        /** Error message displayed when invalid account_key or location parameters are detected */
-        const String INVALID_HTTP_PUT = "\n\nIt appears your LOGENTRIES_ACCOUNT_KEY or LOGENTRIES_LOCATION parameters in web/app.config are invalid!\n\n";
-        /** Error message deisplayed when queue overflow occurs */
-        const String QUEUE_OVERFLOW = "\n\nLogentries Buffer Queue Overflow. Message Dropped!\n\n";
+        // Current version number.
+        protected const String Version = "2.3.5";
 
-        /** Logentries API Server Certificate */
-        static readonly X509Certificate2 LE_API_CERT = new X509Certificate2(Encoding.UTF8.GetBytes(@"-----BEGIN CERTIFICATE-----
+        // Size of the internal event queue. 
+        protected const int QueueSize = 32768;
+
+        // Logentries API server address. 
+        protected const String LeApiUrl = "api.logentries.com";
+
+        // Port number for token logging on Logentries API server. 
+        protected const int LeApiTokenPort = 10000;
+
+        // Port number for TLS encrypted token logging on Logentries API server 
+        protected const int LeApiTokenTlsPort = 20000;
+
+        // Port number for HTTP PUT logging on Logentries API server. 
+        protected const int LeApiHttpPort = 80;
+
+        // Port number for SSL HTTP PUT logging on Logentries API server. 
+        protected const int LeApiHttpsPort = 443;
+
+        // Minimal delay between attempts to reconnect in milliseconds. 
+        protected const int MinDelay = 100;
+
+        // Maximal delay between attempts to reconnect in milliseconds. 
+        protected const int MaxDelay = 10000;
+
+        // Appender signature - used for debugging messages. 
+        protected const String LeSignature = "LE: ";
+
+        // Logentries configuration names. 
+        protected const String ConfigTokenName = "LOGENTRIES_TOKEN";
+        protected const String ConfigAccountKeyName = "LOGENTRIES_ACCOUNT_KEY";
+        protected const String ConfigLocationName = "LOGENTRIES_LOCATION";
+
+        // Error message displayed when invalid token is detected. 
+        protected const String InvalidTokenMessage = "\n\nIt appears your LOGENTRIES_TOKEN value is invalid or missing.\n\n";
+
+        // Error message displayed when invalid account_key or location parameters are detected. 
+        protected const String InvalidHttpPutCredentialsMessage = "\n\nIt appears your LOGENTRIES_ACCOUNT_KEY or LOGENTRIES_LOCATION values are invalid or missing.\n\n";
+
+        // Error message deisplayed when queue overflow occurs. 
+        protected const String QueueOverflowMessage = "\n\nLogentries buffer queue overflow. Message dropped.\n\n";
+
+        #endregion
+
+        #region Singletons
+
+        // UTF-8 output character set. 
+        protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
+
+        // ASCII character set used by HTTP. 
+        protected static readonly ASCIIEncoding ASCII = new ASCIIEncoding();
+
+        // Logentries API server certificate. 
+        protected static readonly X509Certificate2 LeApiServerCertificate =
+            new X509Certificate2(Encoding.UTF8.GetBytes(
+@"-----BEGIN CERTIFICATE-----
 MIIFSjCCBDKgAwIBAgIDBQMSMA0GCSqGSIb3DQEBBQUAMGExCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMR0wGwYDVQQLExREb21haW4gVmFsaWRh
 dGVkIFNTTDEbMBkGA1UEAxMSR2VvVHJ1c3QgRFYgU1NMIENBMB4XDTEyMDkxMDE5
@@ -130,140 +146,305 @@ v1xy+6OfZyGudXhXag82LOfiUgU7hp+RfyUG2KXhIRzhMtDOHpyBjGnVLB0bGYcC
 kAuBvDPPm+C0/M4RLYs=
 -----END CERTIFICATE-----"));
 
-        readonly Random random = new Random();
-
-        /** Custom socket class to allow for choice of Token-based logging and HTTP PUT */
-        private LogentriesTcpClient tcp_client = null;
-        /** Thread used for background polling of log queue */
-        public Thread thread;
-        /** Asynchronous logging started flag */
-        public bool started = false;
-        /** Logentries Token Parameter */
-        private String m_Token = "";
-        /** Logentries Account Key Parameter */
-        private String m_Key = "";
-        /** Logentries Location Parameter */
-        private String m_Location = "";
-        /** Logentries HTTP PUT flag parameter */
-        private bool m_HttpPut = false;
-        /** Logentries SSL/TLS flag parameter */
-        private bool m_Ssl = false;
-        /** Message Queue. */
-        public BlockingCollection<string> queue;
-        /** Newline char to trim from message for formatting */
-        static char[] trimChars = { '\n' };
-        /** Logentries Debug flag parameter */
-        private bool m_Debug;
-
-        #region Public Instance Properties
-
-        /** Debug flag. */
-        public bool Debug
-        {
-            get { return m_Debug; }
-            set { m_Debug = value; }
-        }
-
-        /** Option to set Token programmatically or in Appender Definition */
-        public string Token
-        {
-            get { return m_Token; }
-            set { m_Token = value; }
-        }
-
-        /** HTTP PUT Flag */
-        public bool HttpPut
-        {
-            get { return m_HttpPut; }
-            set { m_HttpPut = value; }
-        }
-
-        /** ACCOUNT_KEY parameter for HTTP PUT logging */
-        public String Key
-        {
-            get { return m_Key; }
-            set { m_Key = value; }
-        }
-
-        /** LOCATION parameter for HTTP PUT logging */
-        public String Location
-        {
-            get { return m_Location; }
-            set { m_Location = value; }
-        }
-
-        /** SSL/TLS parameter */
-        public bool Ssl
-        {
-            get { return m_Ssl; }
-            set { m_Ssl = value; }
-        }
+        // Newline char to trim from message for formatting. 
+        protected static char[] TrimChars = { '\n' };
 
         #endregion
-
-        #region Constructor
 
         public LogentriesAppender()
         {
-            queue = new BlockingCollection<string>(QUEUE_SIZE);
+            Queue = new BlockingCollection<string>(QueueSize);
 
-            thread = new Thread(new ThreadStart(run_loop));
-            thread.Name = "Logentries Log4net Appender";
-            thread.IsBackground = true;
+            WorkerThread = new Thread(new ThreadStart(Run));
+            WorkerThread.Name = "Logentries Log4net Appender";
+            WorkerThread.IsBackground = true;
+        }
+
+        protected readonly BlockingCollection<string> Queue;
+        protected readonly Thread WorkerThread;
+        protected readonly Random Random = new Random();
+
+        protected LogentriesTcpClient TcpClient = null;
+        protected bool IsRunning = false;
+
+        #region Configuration properties
+
+        private String m_Token = "";
+        private String m_AccountKey = "";
+        private String m_Location = "";
+        private bool m_ImmediateFlush = false;
+        private bool m_Debug = false;
+        private bool m_UseHttpPut = false;
+        private bool m_UseSsl = false;
+
+        /* Option to set LOGENTRIES_TOKEN programmatically or in appender definition. */
+        public string Token
+        {
+            get
+            {
+                return m_Token;
+            }
+            set
+            {
+                m_Token = value;
+            }
+        }
+
+        /* Option to set LOGENTRIES_ACCOUNT_KEY programmatically or in appender definition. */
+        public String AccountKey
+        {
+            get
+            {
+                return m_AccountKey;
+            }
+            set
+            {
+                m_AccountKey = value;
+            }
+        }
+
+        /* Option to set LOGENTRIES_LOCATION programmatically or in appender definition. */
+        public String Location
+        {
+            get
+            {
+                return m_Location;
+            }
+            set
+            {
+                m_Location = value;
+            }
+        }
+
+        /* Set to true to always flush the TCP stream after every written entry. */
+        public bool ImmediateFlush
+        {
+            get
+            {
+                return m_ImmediateFlush;
+            }
+            set
+            {
+                m_ImmediateFlush = value;
+            }
+        }
+
+        /* Debug flag. */
+        public bool Debug
+        {
+            get
+            {
+                return m_Debug;
+            }
+            set
+            {
+                m_Debug = value;
+            }
+        }
+
+
+        /* Set to true to use HTTP PUT logging. */
+        public bool UseHttpPut
+        {
+            get
+            {
+                return m_UseHttpPut;
+            }
+            set
+            {
+                m_UseHttpPut = value;
+            }
+        }
+
+        /* This property exists for backward compatibility with older configuration XML. */
+        [Obsolete("Use the UseHttpPut property instead.")]
+        public bool HttpPut
+        {
+            get
+            {
+                return m_UseHttpPut;
+            }
+            set
+            {
+                m_UseHttpPut = value;
+            }
+        }
+
+
+        /* Set to true to use SSL with HTTP PUT logging. */
+        public bool UseSsl
+        {
+            get
+            {
+                return m_UseSsl;
+            }
+            set
+            {
+                m_UseSsl = value;
+            }
+        }
+
+        /* This property exists for backward compatibility with older configuration XML. */
+        [Obsolete("Use the UseHttpPut property instead.")]
+        public bool Ssl
+        {
+            get
+            {
+                return m_UseSsl;
+            }
+            set
+            {
+                m_UseSsl = value;
+            }
         }
 
         #endregion
 
-        private void openConnection()
+        #region AppenderSkeleton overrides
+
+        public void TestAppend(LoggingEvent logEvent)
         {
-            try
+            // Used for unit testing since the Append method is protected.
+            this.Append(logEvent);
+        }
+
+        protected override void Append(LoggingEvent loggingEvent)
+        {
+            if (!IsRunning)
             {
-                if (this.tcp_client == null)
-                    this.tcp_client = new LogentriesTcpClient(HttpPut, Ssl);
-
-                this.tcp_client.Connect();
-
-                if (HttpPut)
+                if (LoadCredentials())
                 {
-                    String header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", this.m_Key, this.m_Location);
-                    this.tcp_client.Write(ASCII.GetBytes(header), 0, header.Length);
+                    WriteDebugMessages("Starting Logentries asynchronous socket client.");
+                    WorkerThread.Start();
+                    IsRunning = true;
                 }
             }
-            catch
+
+            var renderedEvent = RenderLoggingEvent(loggingEvent).TrimEnd(TrimChars);
+            AddLine(renderedEvent);
+        }
+
+        protected override void Append(LoggingEvent[] loggingEvents)
+        {
+            foreach (var logEvent in loggingEvents)
             {
-                throw new IOException();
+                this.Append(logEvent);
             }
         }
 
-        private void reopenConnection()
+        protected override bool RequiresLayout
         {
-            closeConnection();
+            get
+            {
+                return true;
+            }
+        }
 
-            int root_delay = MIN_DELAY;
+        protected override void OnClose()
+        {
+            WorkerThread.Interrupt();
+        }
+
+        #endregion
+
+        #region Protected methods
+
+        protected virtual void Run()
+        {
+            try
+            {
+                // Open connection.
+                ReopenConnection();
+
+                // Send data in queue.
+                while (true)
+                {
+                    // Take data from queue.
+                    var line = Queue.Take();
+
+                    // Replace newline chars with line separator to format multi-line events nicely.
+                    line = line.Replace(Environment.NewLine, "\u2028");
+                    string finalLine = (!UseHttpPut ? this.Token + line : line) + '\n';
+                    byte[] data = UTF8.GetBytes(finalLine);
+
+                    // Send data, reconnect if needed.
+                    while (true)
+                    {
+                        try
+                        {
+                            this.TcpClient.Write(data, 0, data.Length);
+
+                            if (m_ImmediateFlush)
+                                this.TcpClient.Flush();
+                        }
+                        catch (IOException)
+                        {
+                            // Reopen the lost connection.
+                            ReopenConnection();
+                            continue;
+                        }
+
+                        break;
+                    }
+                }
+            }
+            catch (ThreadInterruptedException ex)
+            {
+                WriteDebugMessages("Logentries asynchronous socket client was interrupted.", ex);
+            }
+        }
+
+        protected virtual void OpenConnection()
+        {
+            try
+            {
+                if (TcpClient == null)
+                    TcpClient = new LogentriesTcpClient(UseHttpPut, UseSsl);
+
+                TcpClient.Connect();
+
+                if (UseHttpPut)
+                {
+                    var header = String.Format("PUT /{0}/hosts/{1}/?realtime=1 HTTP/1.1\r\n\r\n", m_AccountKey, m_Location);
+                    TcpClient.Write(ASCII.GetBytes(header), 0, header.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("An error occurred while opening the connection.", ex);
+            }
+        }
+
+        protected virtual void ReopenConnection()
+        {
+            CloseConnection();
+
+            var rootDelay = MinDelay;
             while (true)
             {
                 try
                 {
-                    openConnection();
+                    OpenConnection();
 
                     return;
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
                     if (Debug)
                     {
-                        WriteDebugMessages("Unable to connect to Logentries");
+                        WriteDebugMessages("Unable to connect to Logentries API.", ex);
                     }
                 }
 
-                root_delay *= 2;
-                if (root_delay > MAX_DELAY)
-                    root_delay = MAX_DELAY;
-                int wait_for = root_delay + random.Next(root_delay);
+                rootDelay *= 2;
+                if (rootDelay > MaxDelay)
+                    rootDelay = MaxDelay;
+
+                var waitFor = rootDelay + Random.Next(rootDelay);
 
                 try
                 {
-                    Thread.Sleep(wait_for);
+                    Thread.Sleep(waitFor);
                 }
                 catch
                 {
@@ -272,252 +453,177 @@ kAuBvDPPm+C0/M4RLYs=
             }
         }
 
-        private void closeConnection()
+        protected virtual void CloseConnection()
         {
-            if (this.tcp_client != null)
-                this.tcp_client.Close();
+            if (TcpClient != null)
+                TcpClient.Close();
         }
 
-        public void run_loop()
+        protected virtual void AddLine(string line)
         {
-            try
+            WriteDebugMessages("Queueing: " + line);
+
+            // Try to append data to queue.
+            if (!Queue.TryAdd(line))
             {
-                //Open connection
-                reopenConnection();
-
-                //Send data in queue
-                while (true)
-                {
-                    //Take data from queue
-                    string line = queue.Take();
-                    //Replace newline chars with line separator to format multi-line events nicely
-                    line = line.Replace(System.Environment.NewLine, "\u2028");
-
-                    string final_line = (!HttpPut ? this.Token + line : line) + '\n';
-
-                    byte[] data = LogentriesAppender.UTF8.GetBytes(final_line);
-
-                    //Send data, reconnect if needed
-                    while (true)
-                    {
-                        try
-                        {
-                            this.tcp_client.Write(data, 0, data.Length);
-                        }
-                        catch (IOException e)
-                        {
-                            //Reopen the lost connection
-                            reopenConnection();
-                            continue;
-                        }
-                        break;
-                    }
-                }
-            }
-            catch (ThreadInterruptedException e)
-            {
-                WriteDebugMessages("Logentries asynchronous socket client interrupted");
+                Queue.Take();
+                if (!Queue.TryAdd(line))
+                    WriteDebugMessages(QueueOverflowMessage);
             }
         }
 
-        public void addLine(String line)
-        {
-            WriteDebugMessages("Queueing " + line);
-
-            //Try to append data to queue
-            if (!queue.TryAdd(line))
-            {
-                queue.Take();
-                if (!queue.TryAdd(line))
-                    WriteDebugMessages(QUEUE_OVERFLOW);
-            }
-        }
-
-        protected override void Append(LoggingEvent loggingEvent)
-        {
-            if (!started && checkCredentials())
-            {
-                WriteDebugMessages("Starting Logentries asynchronous socket client");
-                thread.Start();
-                started = true;
-            }
-
-            //Render message content
-            String renderedEvent = RenderLoggingEvent(loggingEvent);
-
-            renderedEvent = renderedEvent.TrimEnd(trimChars);
-
-            addLine(renderedEvent);
-
-        }
-
-        protected override void Append(LoggingEvent[] loggingEvents)
-        {
-            foreach (LoggingEvent logEvent in loggingEvents)
-            {
-                this.Append(logEvent);
-            }
-        }
-
-        protected override bool RequiresLayout
-        {
-            get { return true; }
-        }
-
-        protected override void OnClose()
-        {
-            thread.Interrupt();
-        }
-
-        public bool checkCredentials()
+        protected virtual bool LoadCredentials()
         {
             var appSettings = ConfigurationManager.AppSettings;
 
-            if (!HttpPut)
+            if (!UseHttpPut)
             {
-                if (checkValidUUID(this.m_Token))
+                if (GetIsValidGuid(Token))
                     return true;
 
-                if (appSettings.AllKeys.Contains(CONFIG_TOKEN) && checkValidUUID(appSettings[CONFIG_TOKEN]))
+                var configToken = appSettings[ConfigTokenName];
+                if (!String.IsNullOrEmpty(configToken) && GetIsValidGuid(configToken))
                 {
-                    this.m_Token = appSettings[CONFIG_TOKEN];
+                    Token = configToken;
                     return true;
                 }
 
-                WriteDebugMessages(INVALID_TOKEN);
+                WriteDebugMessages(InvalidTokenMessage);
                 return false;
             }
 
-            if (this.m_Key != "" && checkValidUUID(this.m_Key) && this.m_Location != "")
+            if (AccountKey != "" && GetIsValidGuid(AccountKey) && Location != "")
                 return true;
 
-            if (appSettings.AllKeys.Contains(CONFIG_ACCOUNT_KEY) && checkValidUUID(appSettings[CONFIG_ACCOUNT_KEY]))
+            var configAccountKey = appSettings[ConfigAccountKeyName];
+            if (!String.IsNullOrEmpty(configAccountKey) && GetIsValidGuid(configAccountKey))
             {
-                this.m_Key = appSettings[CONFIG_ACCOUNT_KEY];
+                AccountKey = configAccountKey;
 
-                if (appSettings.AllKeys.Contains(CONFIG_LOCATION) && appSettings[CONFIG_LOCATION] != "")
+                var configLocation = appSettings[ConfigLocationName];
+                if (!String.IsNullOrEmpty(configLocation))
                 {
-                    this.m_Location = appSettings[CONFIG_LOCATION];
+                    Location = configLocation;
                     return true;
                 }
             }
 
-            WriteDebugMessages(INVALID_HTTP_PUT);
+            WriteDebugMessages(InvalidHttpPutCredentialsMessage);
             return false;
         }
 
-        public bool checkValidUUID(string uuid_input)
+        protected virtual bool GetIsValidGuid(string guidString)
         {
-            if (uuid_input == "")
+            if (String.IsNullOrEmpty(guidString))
                 return false;
 
-            System.Guid newGuid = System.Guid.NewGuid();
-
-            return System.Guid.TryParse(uuid_input, out newGuid);
-        }
-		
-		//Used for UnitTests, Append method is protected
-		public void TestAppend(LoggingEvent logEvent)
-		{
-			this.Append(logEvent);
-		}
-
-        private void WriteDebugMessages(string message, Exception e)
-        {
-            message = LE + message;
-            if (!Debug) 
-               return;
-            string[] messages = {message, e.ToString()};
-            foreach (var msg in messages)
-            {
-                //Use below line instead when compiling with log4net1.2.10
-                //LogLog.Debug(msg);
-                LogLog.Debug(typeof(LogentriesAppender), msg);
-            }
+            Guid parsedGuid;
+            return Guid.TryParse(guidString, out parsedGuid);
         }
 
-        private void WriteDebugMessages(string message)
+        protected virtual void WriteDebugMessages(string message, Exception ex)
         {
             if (!Debug)
                 return;
 
-            message = LE + message;
+            message = LeSignature + message;
+            string[] messages = { message, ex.ToString() };
+            foreach (var msg in messages)
+            {
+                // Use below line instead when compiling with log4net1.2.10.
+                //LogLog.Debug(msg);
 
-            //Use below line instead when compiling with log4net1.2.10
-            //LogLog.Debug(message);
-	        LogLog.Debug(typeof(LogentriesAppender), message);
+                LogLog.Debug(typeof(LogentriesAppender), msg);
+            }
         }
 
-        private string SubstituteAppSetting(string key)
+        protected virtual void WriteDebugMessages(string message)
+        {
+            if (!Debug)
+                return;
+
+            message = LeSignature + message;
+
+            // Use below line instead when compiling with log4net1.2.10.
+            //LogLog.Debug(message);
+
+            LogLog.Debug(typeof(LogentriesAppender), message);
+        }
+
+        protected virtual string SubstituteAppSetting(string key)
         {
             var appSettings = ConfigurationManager.AppSettings;
             if (appSettings.HasKeys() && appSettings.AllKeys.Contains(key))
-            {
                 return appSettings[key];
-            }
             else
-            {
                 return key;
-            }
         }
 
-        /** Custom Class to support both HTTP PUT and Token-based logging as well as TLS/SSL */
-        private class LogentriesTcpClient
-        {
-            private TcpClient client = null;
-            private Stream stream = null;
-            private SslStream ssl_stream = null;
-            private bool ssl_choice = false;
-            private int port;
+        #endregion
 
-            public LogentriesTcpClient(bool httpPut, bool ssl)
+        /// <summary>
+        /// Custom class to support both HTTP PUT and Token-based logging as well as TLS/SSL.
+        /// </summary>
+        protected class LogentriesTcpClient
+        {
+            public LogentriesTcpClient(bool useHttpPut, bool useSsl)
             {
-                ssl_choice = ssl;
-                if (!ssl)
-                    port = httpPut ? LE_HTTP_PORT : LE_TOKEN_PORT;
+                m_UseSsl = useSsl;
+                if (!m_UseSsl)
+                    m_TcpPort = useHttpPut ? LeApiHttpPort : LeApiTokenPort;
                 else
-                    port = httpPut ? LE_HTTP_SSL_PORT : LE_TOKEN_TLS_PORT;
+                    m_TcpPort = useHttpPut ? LeApiHttpsPort : LeApiTokenTlsPort;
             }
 
-            private Stream getTheStream()
+            private bool m_UseSsl = false;
+            private int m_TcpPort;
+            private TcpClient m_Client = null;
+            private Stream m_Stream = null;
+            private SslStream m_SslStream = null;
+
+            private Stream ActiveStream
             {
-                return ssl_choice ? ssl_stream : stream;
+                get
+                {
+                    return m_UseSsl ? m_SslStream : m_Stream;
+                }
             }
 
             public void Connect()
             {
-                this.client = new TcpClient(LE_API, port);
-                this.client.NoDelay = true;
+                m_Client = new TcpClient(LeApiUrl, m_TcpPort);
+                m_Client.NoDelay = true;
 
-                this.stream = client.GetStream();
+                m_Stream = m_Client.GetStream();
 
-                if (ssl_choice)
+                if (m_UseSsl)
                 {
-                    this.ssl_stream = new SslStream(this.stream, false, (sender, cert, chain, errors) => cert.GetCertHashString() == LE_API_CERT.GetCertHashString());
-
-                    this.ssl_stream.AuthenticateAsClient(LE_API);
+                    m_SslStream = new SslStream(m_Stream, false, (sender, cert, chain, errors) => cert.GetCertHashString() == LeApiServerCertificate.GetCertHashString());
+                    m_SslStream.AuthenticateAsClient(LeApiUrl);
                 }
             }
 
             public void Write(byte[] buffer, int offset, int count)
             {
-                this.getTheStream().Write(buffer, offset, count);
+                ActiveStream.Write(buffer, offset, count);
             }
 
             public void Flush()
             {
-                this.getTheStream().Flush();
+                ActiveStream.Flush();
             }
 
             public void Close()
             {
-                if (this.client != null)
+                if (m_Client != null)
                 {
                     try
                     {
-                        this.client.Close();
+                        m_Client.Close();
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             }
         }
