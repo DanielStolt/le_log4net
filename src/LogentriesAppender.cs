@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.6
+ *   VERSION:  2.3.7
  */
 
 using System;
@@ -58,7 +58,7 @@ namespace log4net.Appender
         #region Constants
 
         // Current version number.
-        protected const String Version = "2.3.6";
+        protected const String Version = "2.3.7";
 
         // Size of the internal event queue. 
         protected const int QueueSize = 32768;
@@ -179,7 +179,7 @@ kAuBvDPPm+C0/M4RLYs=
         public LogentriesAppender()
         {
             Queue = new BlockingCollection<string>(QueueSize);
-            _allQueues.Add(queue);
+            _allQueues.Add(Queue);
 
             WorkerThread = new Thread(new ThreadStart(Run));
             WorkerThread.Name = "Logentries Log4net Appender";
