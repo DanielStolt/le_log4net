@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.5
+ *   VERSION:  2.3.6
  */
 
 using System;
@@ -58,7 +58,7 @@ namespace log4net.Appender
         #region Constants
 
         // Current version number.
-        protected const String Version = "2.3.5";
+        protected const String Version = "2.3.6";
 
         // Size of the internal event queue. 
         protected const int QueueSize = 32768;
