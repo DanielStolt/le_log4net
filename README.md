@@ -159,6 +159,8 @@ You can also download a hello world sample app from the Downloads section. It is
 
 Ensure that you followed the section of this readme regarding your AssemblyInfo.cs file.
 
+Shutting Down the Logger
+------------------------
 The Logentries appender communicates with the Logentries system using a background thread and streams the logs as they come in to the server.  Because of this nature, when an application is shutting down, it is possible that any logs messages created will not have time to be posted to Logentries before the application domain is shut down.
 
 To work around that problem, consider the following code, which will block for a moment allow LE to finish its logging.  The method returns true or false depending if the queues are empty.
