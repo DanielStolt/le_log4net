@@ -1,5 +1,5 @@
 // 
-// Copyright (c) 2010-2012 Logentries, Jlizard
+// Copyright (c) 2010-2013 Logentries, Jlizard
 // 
 // All rights reserved.
 // 
@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.7
+ *   VERSION:  2.4.0
  */
 
 using System;
@@ -58,7 +58,7 @@ namespace log4net.Appender
 		#region Constants
 
 		// Current version number.
-		protected const String Version = "2.3.7";
+		protected const String Version = "2.4.0";
 
 		// Size of the internal event queue. 
 		protected const int QueueSize = 32768;
@@ -87,16 +87,21 @@ namespace log4net.Appender
 		// Appender signature - used for debugging messages. 
 		protected const String LeSignature = "LE: ";
 
-		// Logentries configuration names. 
-		protected const String ConfigTokenName = "LOGENTRIES_TOKEN";
-		protected const String ConfigAccountKeyName = "LOGENTRIES_ACCOUNT_KEY";
-		protected const String ConfigLocationName = "LOGENTRIES_LOCATION";
+		// Legacy Logentries configuration names. 
+		protected const String LegacyConfigTokenName = "LOGENTRIES_TOKEN";
+		protected const String LegacyConfigAccountKeyName = "LOGENTRIES_ACCOUNT_KEY";
+		protected const String LegacyConfigLocationName = "LOGENTRIES_LOCATION";
+
+		// New Logentries configuration names.
+		protected const String ConfigTokenName = "Logentries.Token";
+		protected const String ConfigAccountKeyName = "Logentries.AccountKey";
+		protected const String ConfigLocationName = "Logentries.Location";
 
 		// Error message displayed when invalid token is detected. 
-		protected const String InvalidTokenMessage = "\n\nIt appears your LOGENTRIES_TOKEN value is invalid or missing.\n\n";
+		protected const String InvalidTokenMessage = "\n\nIt appears your Logentries.Token value is invalid or missing.\n\n";
 
 		// Error message displayed when invalid account_key or location parameters are detected. 
-		protected const String InvalidHttpPutCredentialsMessage = "\n\nIt appears your LOGENTRIES_ACCOUNT_KEY or LOGENTRIES_LOCATION values are invalid or missing.\n\n";
+		protected const String InvalidHttpPutCredentialsMessage = "\n\nIt appears your Logentries.AccountKey or Logentries.Location values are invalid or missing.\n\n";
 
 		// Error message deisplayed when queue overflow occurs. 
 		protected const String QueueOverflowMessage = "\n\nLogentries buffer queue overflow. Message dropped.\n\n";
@@ -203,7 +208,7 @@ kAuBvDPPm+C0/M4RLYs=
 		private bool m_UseHttpPut = false;
 		private bool m_UseSsl = false;
 
-		/* Option to set LOGENTRIES_TOKEN programmatically or in appender definition. */
+		/* Option to set Logentries.Token programmatically or in appender definition. */
 		public string Token
 		{
 			get
@@ -216,7 +221,7 @@ kAuBvDPPm+C0/M4RLYs=
 			}
 		}
 
-		/* Option to set LOGENTRIES_ACCOUNT_KEY programmatically or in appender definition. */
+		/* Option to set Logentries.AccountKey programmatically or in appender definition. */
 		public String AccountKey
 		{
 			get
@@ -229,7 +234,7 @@ kAuBvDPPm+C0/M4RLYs=
 			}
 		}
 
-		/* Option to set LOGENTRIES_LOCATION programmatically or in appender definition. */
+		/* Option to set Logentries.Location programmatically or in appender definition. */
 		public String Location
 		{
 			get
@@ -505,7 +510,7 @@ kAuBvDPPm+C0/M4RLYs=
 				if (GetIsValidGuid(Token))
 					return true;
 
-				var configToken = CloudConfigurationManager.GetSetting(ConfigTokenName);
+				var configToken = CloudConfigurationManager.GetSetting(LegacyConfigTokenName) ?? CloudConfigurationManager.GetSetting(ConfigTokenName);
 				if (!String.IsNullOrEmpty(configToken) && GetIsValidGuid(configToken))
 				{
 					Token = configToken;
@@ -519,12 +524,12 @@ kAuBvDPPm+C0/M4RLYs=
 			if (AccountKey != "" && GetIsValidGuid(AccountKey) && Location != "")
 				return true;
 
-			var configAccountKey = CloudConfigurationManager.GetSetting(ConfigAccountKeyName);
+			var configAccountKey = CloudConfigurationManager.GetSetting(LegacyConfigAccountKeyName) ?? CloudConfigurationManager.GetSetting(ConfigAccountKeyName);
 			if (!String.IsNullOrEmpty(configAccountKey) && GetIsValidGuid(configAccountKey))
 			{
 				AccountKey = configAccountKey;
 
-				var configLocation = CloudConfigurationManager.GetSetting(ConfigLocationName);
+				var configLocation = CloudConfigurationManager.GetSetting(LegacyConfigLocationName) ?? CloudConfigurationManager.GetSetting(ConfigLocationName);
 				if (!String.IsNullOrEmpty(configLocation))
 				{
 					Location = configLocation;
@@ -573,15 +578,6 @@ kAuBvDPPm+C0/M4RLYs=
 
 			LogLog.Debug(typeof(LogentriesAppender), message);
 		}
-
-		//protected virtual string SubstituteAppSetting(string key)
-		//{
-		//	var appSettings = ConfigurationManager.AppSettings;
-		//	if (appSettings.HasKeys() && appSettings.AllKeys.Contains(key))
-		//		return appSettings[key];
-		//	else
-		//		return key;
-		//}
 
 		#endregion
 
