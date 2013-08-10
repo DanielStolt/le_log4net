@@ -34,7 +34,7 @@
 // Viliam Holub <vilda@logentries.com>
 
 /*
- *   VERSION:  2.3.5
+ *   VERSION:  2.3.7
  */
 
 using System;
@@ -58,7 +58,7 @@ namespace log4net.Appender
         #region Constants
 
         // Current version number.
-        protected const String Version = "2.3.5";
+        protected const String Version = "2.3.7";
 
         // Size of the internal event queue. 
         protected const int QueueSize = 32768;
@@ -149,11 +149,37 @@ kAuBvDPPm+C0/M4RLYs=
         // Newline char to trim from message for formatting. 
         protected static char[] TrimChars = { '\n' };
 
+        //static list of all the queues the le appender might be managing.
+        private static ConcurrentBag<BlockingCollection<string>> _allQueues = new ConcurrentBag<BlockingCollection<string>>(); 
+
+        /// <summary>
+        /// Determines if the queue is empty after waiting the specified waitTime.
+        /// Returns true or false if the underlying queues are empty.
+        /// </summary>
+        /// <param name="waitTime">The length of time the method should block before giving up waiting for it to empty.</param>
+        /// <returns>True if the queue is empty, false if there are still items waiting to be written.</returns>
+        public static bool AreAllQueuesEmpty(TimeSpan waitTime)
+        {
+            var start = DateTime.UtcNow;
+            var then = DateTime.UtcNow;
+
+            while (start.Add(waitTime) > then)
+            {
+                if (_allQueues.All(x => x.Count == 0))
+                    return true;
+
+                Thread.Sleep(100);
+                then = DateTime.UtcNow;
+            }
+
+            return _allQueues.All(x => x.Count == 0);
+        }
         #endregion
 
         public LogentriesAppender()
         {
             Queue = new BlockingCollection<string>(QueueSize);
+            _allQueues.Add(Queue);
 
             WorkerThread = new Thread(new ThreadStart(Run));
             WorkerThread.Name = "Logentries Log4net Appender";
