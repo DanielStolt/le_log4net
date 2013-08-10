@@ -158,3 +158,15 @@ The Logentries Plugin logs its debug messages to log4net's internal logger. This
 You can also download a hello world sample app from the Downloads section. It is ready to go and only needs `LOGENTRIES_TOKEN` to be entered into the `Web/App.config`.
 
 Ensure that you followed the section of this readme regarding your AssemblyInfo.cs file.
+
+Shutting Down the Logger
+------------------------
+The Logentries appender communicates with the Logentries system using a background thread and streams the logs as they come in to the server.  Because of this nature, when an application is shutting down, it is possible that any logs messages created will not have time to be posted to Logentries before the application domain is shut down.
+
+To work around that problem, consider the following code, which will block for a moment allow LE to finish its logging.  The method returns true or false depending if the queues are empty.
+
+    public void Application_End()
+    {
+       //this will give 5 seconds for the LE background thread to finish logging to Logentries' server.
+       log4net.Appenders.LogentriesAppender.AreAllQueuesEmpty(TimeSpan.FromSeconds(5));
+    }
